@@ -326,6 +326,7 @@ var netris = function(playerid, gameloop) {
         },
 		
 		run: function() {
+			$("#musica")[0].play();
 			game_state = game.running;
 			this.start();
 		},
@@ -361,6 +362,7 @@ var netris = function(playerid, gameloop) {
             }
         },
 		stopGame: function() {
+			$('#musica')[0].pause();
 			game_state = game.start;
 		},
 
