@@ -1,0 +1,273 @@
+<html>
+  <head>
+    <title>A canvas fillRect, strokeRect and clearRect example</title>
+    <meta name="DC.creator" content="Matthew Kanwisher, http://www.kanwisher.com/">
+	<meta http-equiv="refresh" content="90"> <!-- for debugging -->
+	<script type="text/javascript" src="js/underscore-min.js"></script>
+	<script type="text/javascript" src="js/jquery-1.6.min.js"></script>
+    <script type="text/javascript">
+	  var blocks = [];
+	
+      // get the canvas element using the DOM
+      var canvas;
+      // use getContext to use the canvas for drawing
+	  var ctx;	
+	  var DEFAULT_GAME_SPEED = 1;
+	  var game_speed = 1;
+	  var last_key = null;
+	
+	  var block_types = [];
+	  block_types[0] = [[1,1,1,1,1]]; //VERTICAl/horizontal line
+	  block_types[1] = [[1,1,1], [1,1,1], [1,1,1]]; // square
+	  block_types[2] = [[1],[1],[1],[1,1,1]]; // L shape
+
+	  var grid= new Object();
+	  var arrow = {left: 37, up: 38, right: 39, down: 40, space: 32 };
+	  var game = {start:0, running:1, over:2};
+	  var game_state = game.running;
+	  var BLOCK_SIZE = 20;
+	  var grid_full = [];
+	  var objIds = 0;
+	  var num_bottom = 0;	
+		
+	  var curMoving;
+	  function createBlock() {
+		game_speed = DEFAULT_GAME_SPEED;
+		var block = new Object();
+		block.type = Math.floor(Math.random()*block_types.length); //pick a random number between 0-n types of blocks
+		block.y = 0;
+		block.x=  5;
+		block.id = objIds;
+		objIds++;
+		if(curMoving) {
+			blocks[curMoving.id] = curMoving;
+		}
+		curMoving = block;
+		blocks.push(block);
+	}
+
+      function start(){
+		canvas = document.getElementById('tetris1');
+		ctx = canvas.getContext('2d');
+
+        // Make sure we don't execute when canvas isn't supported
+        if (ctx){
+			grid.x_size = canvas.width / BLOCK_SIZE;
+			grid.y_size = canvas.height / BLOCK_SIZE;
+			
+			for(var i =0; i< grid.y_size; i++) {
+				grid_full[i] = [];
+				for(var j =0; j< grid.x_size; j++) {
+					grid_full[i][j] =0;
+				}
+			}
+			createBlock(); // Start with one block
+			setTimeout( "gameLoop()", 500 );
+        } else {
+          alert('You need Safari or Firefox 1.5+ to see this demo.');
+        }
+      }
+
+	  function gameLoop() {
+			if(game_state == game.running) {
+			    ctx.clearRect(0, 0, canvas.width, canvas.height);
+		
+				var change = checkKeys();
+				drawGrid(); //only for debugging
+				drawObjects();
+				change.y +=  1; //Move it down
+				if(!checkCollision(curMoving,change)) {		    
+					curMoving.y += change.y;
+					curMoving.x += change.x;
+				}
+				setTimeout( "gameLoop()", 500 / game_speed );
+			}
+	}
+	 function checkKeys(){
+		var change = new Object();
+		change.x = 0, change.y = 0; //x,y
+		console.log(last_key);
+		if(last_key) {
+			switch (last_key) {
+		    case arrow.left:
+		       console.log("left");
+			   if( curMoving.x > 0 ) {
+			   	change.x -= 1;
+				}
+		    break;
+		    case arrow.right:
+		       console.log("right");
+			   change.x += 1;
+		    break;
+		    case arrow.down:
+		      console.log("down");
+		      change.y += 1;
+		    break;
+		    case arrow.space:
+		      console.log("space");
+		      change.y += grid.y_size;
+		    break;
+		  }
+		  
+		}
+		last_key = null;
+		return change;
+	}
+	 function checkCollision(obj, change){
+		var collided_w_box = false;
+		//Collide bottom
+		var obj_h = obj.y + block_types[obj.type].length + change.y;
+		console.log("obj_h", obj_h);
+		if( obj_h  >= (grid.y_size ) ) {
+			console.log("hit bottom");
+			if( change.y > 1) {
+				change.y -= 1;
+				console.log("trying one less", change.y);
+				return checkCollision(obj, change);
+			}
+			curMoving.x += change.x;
+			curMoving.y += change.y;
+			
+			createBlock();
+			num_bottom += 1;
+			if(num_bottom >= 5) {
+				debugger;
+			}
+			console.log("num_bottom", num_bottom);
+			return true;
+		}
+		else {
+			//lets check to see if it collided with another block
+			_.each(blocks, function(block) {
+				 //Naive approach, see if we will collide with any blocks
+				 if(block.id != obj.id) {
+					  blockdata = block_types[block.type];
+
+			          // Draw shapes
+					  _.each(blockdata, function(line, i) {
+							 _.each(line, function(item, j) {
+								if( item == 1) {
+									//Lol this is bad, iterate each block in the current block
+									var objdata = block_types[obj.type];
+									var b_x = (block.x + j);
+									var b_y = (block.y + i);
+									_.each(objdata, function(oline, i2) {
+										 _.each(oline, function(oitem, j2) {	
+											if( oitem == 1) {
+												var o_x = (obj.x + j2) + change.x; 
+												var o_y = (obj.y + i2) + change.y;
+//												console.log( "id-" + block.id + "=" +b_x + "=" + o_x + "=" + b_y + "=" + o_y );
+												if( b_x == o_x && o_y == b_y ) {
+													//Collide
+													
+													console.log("collide", block, obj);													
+													collided_w_box = true;
+												} 
+											}
+										});
+									});								  
+								}
+							});
+						});
+					}
+			});
+		}
+		if(collided_w_box){
+			if( curMoving.y == 0) {
+				//were at top game over;
+				game_state = game.over;
+				alert("game over!");
+				return true;
+			}
+			
+			curMoving.x += change.x;
+			curMoving.y += change.y;
+			
+			createBlock();
+			return true;
+		}
+		console.log("============================");
+
+		return false;
+	}
+	
+	  function drawGrid(){
+		ctx.fillStyle   = '#00f'; // blue
+		ctx.strokeStyle = '#f00'; // red
+		ctx.lineWidth   = 1;
+
+		for(var i=1;i<grid.x_size;i++) {
+			ctx.beginPath();
+			ctx.moveTo(BLOCK_SIZE*i, 0); 
+			ctx.lineTo(BLOCK_SIZE*i, canvas.height);
+
+			ctx.stroke();
+			ctx.closePath();
+		}
+
+		for(var i=1;i<grid.y_size;i++) {
+			ctx.beginPath();
+			ctx.moveTo(0, BLOCK_SIZE*i); 
+			ctx.lineTo(canvas.width, BLOCK_SIZE*i);
+
+			ctx.stroke();
+			ctx.closePath();
+		}
+
+		
+	 }
+	
+	  function drawObjects(){
+		  _.each(blocks, function(block) {
+				
+			  blockdata = block_types[block.type];
+			  
+	          // Draw shapes
+			  _.each(blockdata, function(line, i) {
+					 _.each(line, function(item, j) {	
+						if( item == 1) {
+		          			ctx.fillRect((block.x + j) *  BLOCK_SIZE, (block.y + i) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE * item);
+//							grid_full[block.y + j][block.y + i] = 1;
+						};
+					});
+				});
+		});
+		
+//		printGrid(); //Debug
+	}
+	
+	function printGrid() {
+		_.each(grid_full, function(g) {
+			console.log(g.join());
+		});
+	}
+	
+	$(document).keydown(function (e) {
+	  var keyCode = e.keyCode || e.which;
+	  last_key = keyCode;
+	  console.log(keyCode);
+	});
+
+	$(document).keyup(function (e) {
+			console.log("key up");
+			last_key = null;
+		});
+
+
+    </script>
+    <style type="text/css">
+      body { margin: 20px; font-family: arial,verdana,helvetica; background: #fff;}
+      h1 { font-size: 140%; font-weight:normal; color: #036; border-bottom: 1px solid #ccc; }
+      canvas { border: 2px solid #000; float: left; margin-right: 20px; margin-bottom: 20px; }
+      pre { float:left; display:block; background: rgb(238,238,238); border: 1px dashed #666; padding: 15px 20px; margin: 0 0 10px 0; }
+    </style>
+  </head>
+
+  <body onload="start();">
+    <h1>HTML5 Tetris, a port of the old irc netris, with multiple players</h1>
+    <div>
+      <canvas id="tetris1" width="300" height="260"></canvas>
+    </div>
+  </body>
+
+</html>
