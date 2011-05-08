@@ -34,7 +34,7 @@ var netris = function(playerid, gameloop) {
         running: 1,
         over: 2
     };
-    var game_state = game.running;
+    var game_state = game.start;
     var BLOCK_SIZE = 20;
     var grid_full = [];
     var objIds = 0;
@@ -55,7 +55,7 @@ var netris = function(playerid, gameloop) {
         block.x = 5;
         block.id = objIds;
         block.color = colors[Math.floor(Math.random() * colors.length)];
-        block.blockdata = block_types[block.type].clone();
+        block.blockdata = clone(block_types[block.type]);
         block.largest_width = calc_width(block.blockdata);
 
 
@@ -65,6 +65,10 @@ var netris = function(playerid, gameloop) {
         }
         curMoving = block;
         blocks.push(block);
+
+		if(network.isNetworkedGame()) {
+			network.send_message("createBlock", curMoving);
+		}
     }
 
 
@@ -279,13 +283,13 @@ var netris = function(playerid, gameloop) {
         return largest
     }
 
-    Object.prototype.clone = function() {
-        var newObj = (this instanceof Array) ? [] : {};
-        for (i in this) {
+     function clone(ths) {
+        var newObj = (ths instanceof Array) ? [] : {};
+        for (i in ths) {
             if (i == 'clone') continue;
-            if (this[i] && typeof this[i] == "object") {
-                newObj[i] = this[i].clone();
-            } else newObj[i] = this[i]
+            if (ths[i] && typeof ths[i] == "object") {
+                newObj[i] = clone(ths[i]);
+            } else newObj[i] = ths[i]
         }
         return newObj;
     };
@@ -314,12 +318,18 @@ var netris = function(playerid, gameloop) {
 				if(enable_game_loop) {
                 	createBlock();
 				}
+				
                 // Start with one block
                	setTimeout("player" + player_id + ".gameLoop()", DEFAULT_INTERVAL);
             } else {
                 alert('You need Safari or Firefox 1.5+ to see this demo.');
             }
         },
+		
+		run: function() {
+			game_state = game.running;
+			this.start();
+		},
 
         gameLoop: function() {
             if (game_state == game.running) {
@@ -337,9 +347,31 @@ var netris = function(playerid, gameloop) {
 				}
                 drawObjects();
 
+				if(network.isNetworkedGame() &&  player_id == '1') {
+					network.send_message("updateBlock", curMoving);
+				}
+				if(player_id == '2') {
+					console.log("blocks", blocks);
+				}
+
                 setTimeout("player" + player_id + ".gameLoop()", DEFAULT_INTERVAL / game_speed);
             }
-        }
+        },
+		stopGame: function() {
+			game_state = game.start;
+		},
+
+		internal: function() {
+			return {
+				addObject: function(block) {
+					curMoving = block;
+			        blocks[block.id] = block;
+				},
+				updateObject: function(block){
+					blocks[block.id] = block;
+				}
+			}
+		}
 
 
     }
@@ -348,3 +380,4 @@ var netris = function(playerid, gameloop) {
 
 
 var player1 = netris('1',true);
+var player2 = netris('2',false);

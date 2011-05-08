@@ -12,7 +12,7 @@ include WEBrick    # let's import the namespace so
 
 
 
-class Simple < WEBrick::HTTPServlet::AbstractServlet
+class Auth < WEBrick::HTTPServlet::AbstractServlet
 
  def do_POST(request, response)
    status, content_type = do_stuff_with(request)
@@ -41,6 +41,37 @@ class Simple < WEBrick::HTTPServlet::AbstractServlet
 
 end
 
+
+
+class Passthru < WEBrick::HTTPServlet::AbstractServlet
+
+ def do_POST(request, response)
+   status, content_type = do_stuff_with(request)
+
+   Pusher.app_id = '5420'
+   Pusher.key = '4aeaafae8e422b589d9a'
+   Pusher.secret = '3e63d5542aee4d876dde'
+   
+   event_name = request.query['event_name']
+   puts "----"
+   puts request.query['channel_name']
+   puts event_name
+   puts request.query['data']
+   puts "----"
+
+   Pusher[request.query['channel_name']].trigger!(event_name, request.query['data'])
+   response.body = "sent".to_json
+ end
+
+ def do_stuff_with(request)
+   return 200, "application/json"
+ end
+
+end
+
+
+ 
+
 options = {:Port=>8080, :DocumentRoot=> './'}
  
 optparser=OptionParser.new do |opts|
@@ -60,7 +91,8 @@ def start_webrick(config = {})
   ['INT', 'TERM'].each {|signal|
     trap(signal) {server.shutdown}
   }
-  server.mount "/pusher/auth", Simple
+  server.mount "/pusher/auth", Auth
+  server.mount "/send_event/", Passthru
   server.start
 end
  
