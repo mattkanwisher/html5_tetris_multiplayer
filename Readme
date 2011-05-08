@@ -1,3 +1,3 @@
 A quick and dirty html5 clone of netris (a tetris clone). Supports multiplayer via pusherapp.com
 
-To run it, do  "ruby server.rb" and go to http://localhost:8080/
+To run it, do  "ruby server.rb" and go to http://localhost:8080/.
