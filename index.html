@@ -13,6 +13,17 @@
 	      if (window.console && window.console.log) window.console.log(message);
 	    };
 
+ 		var logged_in_users = 0;
+		function update_member_count(cnt){
+			logged_in_users = cnt;
+			Pusher.log ("update_member_count", cnt);
+		}
+		function add_member(id, info){
+			
+		}
+		function remove_member(id, info){
+			
+		}
 	    // Flash fallback logging - don't include this in production
 	    WEB_SOCKET_DEBUG = true;
 	 	var game_id = 1;
@@ -22,6 +33,8 @@
 
 		channel.bind('pusher:subscription_succeeded', function(members) {
 		  // for example
+		  debugger;
+		
 		  update_member_count(members.count);
 
 		  members.each(function(member) {
