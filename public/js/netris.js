@@ -246,7 +246,10 @@ var netris = function(playerid, gameloop) {
                         ctx.fillStyle = block.color;
                         ctx.fillRect((block.x + j) * BLOCK_SIZE, (block.y + i) * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE * item);
                         if (block.y >= 0) {
-                           	grid_full[block.y + j][block.x + i] = 1;
+							try {
+                           		grid_full[block.y + j][block.x + i] = 1;
+							}
+							catch(err) {} //todo more elegant solution
                         }
                     };
                 });
