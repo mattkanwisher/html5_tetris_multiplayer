@@ -72,7 +72,7 @@ end
 
  
 
-options = {:Port=>8080, :DocumentRoot=> './'}
+options = {:Port=>8080, :DocumentRoot=> 'public/'}
  
 optparser=OptionParser.new do |opts|
     opts.banner = "Usage: #{File.basename(__FILE__)} [options]"
