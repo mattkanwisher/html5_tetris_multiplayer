@@ -1,0 +1,57 @@
+<html>
+  <head>
+    <title>Netris returns! A simple html5 canvas port of Netris (a tetris clone)</title>
+    <meta name="DC.creator" content="Matthew Kanwisher, http://www.kanwisher.com/">
+<!--	<meta http-equiv="refresh" content="90">  -->  <!-- for debugging -->
+	<script src="http://js.pusherapp.com/1.8/pusher.min.js" type="text/javascript"></script>
+	<script type="text/javascript" src="js/3rd_party/underscore-min.js"></script>
+	<script type="text/javascript" src="js/3rd_party/jquery-1.6.min.js"></script>
+    <script type="text/javascript" src="js/netris.js"> </script>
+	<script type="text/javascript" src="js/network.js">	  </script>
+
+    <style type="text/css">
+      body { margin: 20px; font-family: arial,verdana,helvetica; background: #fff;}
+    dd  h1 { font-size: 140%; font-weight:normal; color: #036; border-bottom: 1px solid #ccc; }
+      canvas { border: 2px solid #000; float: left; margin-right: 20px; margin-bottom: 20px; }
+      pre { float:left; display:block; background: rgb(238,238,238); border: 1px dashed #666; padding: 15px 20px; margin: 0 0 10px 0; }
+    </style>
+  </head>
+
+  <body onload="">
+    <h1>Netris returns ! HTML5 a port of the old irc netris</h1>
+    <div>
+		<div style="width:100%">
+			<div style="float:left;display:block">
+				<div> Player 1 </div>
+    
+				<div>
+			      <canvas id="tetris1" width="280" height="500"></canvas>
+			    </div>
+				<div> Points : <div id="points1" style="display:inline"> </div> </div>
+			</div>
+			<div style="float:left">
+
+				<div> Player 2 </div>
+
+				<div>
+			      <canvas id="tetris2" width="280" height="500"></canvas>
+			    </div>
+				<div> Points : <div id="points2" style="display:inline"> </div> </div>
+			</div>
+		</div>
+		<div style="float:left">
+			<a href="#" onclick="player1.run();return false;">Start game</a>
+			<br/>
+			Start network game
+<!--			<a href="#" onclick="network.startNetworkGame();return false;">Start network game</a> -->
+			<br/>
+			<a href="#" onclick="network.startMirroredGame();return false;">Play Mirrored network game</a>
+			<br/>
+			<a href="#" onclick="player1.stopGame();player2.stopGame();return false;">Stop Game</a>
+
+		</div>
+	</div>
+
+  </body>
+
+</html>
